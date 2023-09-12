@@ -39,12 +39,18 @@ git commit -m "Descriptive message about the changes you've made"
 git push origin feature-name-or-bugfix
 ```
 
-5. **Open a Pull Request (PR)**: Return to the GitHub page of the main repository and click on "Pull request". Start a new pull request from your recent branch to the main branch. Fill in the necessary details and create the PR.
+5. **Open a Pull Request (PR)**: Return to the GitHub page of the main repository and click on "Pull request". Start a new pull request from your recent branch to the main branch. Fill in the necessary details and create the PR. Do tag your PR if possible:
+1. `feat`: Introducing a new feature.
+1. `fix`: A bug fix.
+1. `docs`: Documentation only changes.
+1. `refactor`: A code change that neither fixes a bug nor adds a feature.
+1. `test`: Adding missing tests or correcting existing tests.
+1. `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation.
 
 ## Guidelines
 
-3. **Documentation**: Ensure your functions are well-documented for readability and clarity.
-4. **Use Static Typing**: Incorporate static typing as much as possible.
+1. **Documentation**: Ensure your functions are well-documented for readability and clarity.
+1. **Use Static Typing**: Incorporate static typing as much as possible.
 
 ## After Making a Pull Request (PR)
 
