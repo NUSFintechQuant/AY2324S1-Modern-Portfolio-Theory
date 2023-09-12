@@ -40,12 +40,12 @@ git push origin feature-name-or-bugfix
 ```
 
 5. **Open a Pull Request (PR)**: Return to the GitHub page of the main repository and click on "Pull request". Start a new pull request from your recent branch to the main branch. Fill in the necessary details and create the PR. Do tag your PR if possible:
-1. `feat`: Introducing a new feature.
-1. `fix`: A bug fix.
-1. `docs`: Documentation only changes.
-1. `refactor`: A code change that neither fixes a bug nor adds a feature.
-1. `test`: Adding missing tests or correcting existing tests.
-1. `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation.
+    - `feat`: Introducing a new feature.
+    - `fix`: A bug fix.
+    - `docs`: Documentation only changes.
+    - `refactor`: A code change that neither fixes a bug nor adds a feature.
+    - `test`: Adding missing tests or correcting existing tests.
+    - `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation.
 
 ## Guidelines
 
