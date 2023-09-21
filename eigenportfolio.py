@@ -61,7 +61,10 @@ TICKERS = [
 
 def get_expected_returns(data):
     """
-    Calculate de-meaned expected returns from asset price data and scale them by standard deviation.
+    Calculate expected returns from asset price data.
+    Normalize stock returns data by subtracting the mean and 
+    dividing by standard diviation. 
+    Normalisation is required by PCA.
 
     Parameters:
         data (pd.DataFrame): DataFrame containing asset price data.
@@ -69,15 +72,15 @@ def get_expected_returns(data):
     Returns:
         pd.DataFrame: DataFrame containing expected returns.
     """
-    asset_returns = pd.DataFrame(
+    simple_returns = pd.DataFrame(
         data=np.zeros(shape=(len(data.index), data.shape[1])),
         columns=data.columns.values,
         index=data.index,
     )
-    normed_returns = asset_returns
-    asset_returns = data.pct_change().dropna()
-    normed_returns = (asset_returns - asset_returns.mean()) / asset_returns.std()
-    return normed_returns
+    normalised_returns = simple_returns
+    simple_returns = data.pct_change().dropna()
+    normalised_returns = (simple_returns - simple_returns.mean()) / simple_returns.std()
+    return normalised_returns
 
 
 def get_data(tickers):
