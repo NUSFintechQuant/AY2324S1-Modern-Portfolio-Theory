@@ -60,6 +60,15 @@ TICKERS = [
 
 
 def get_expected_returns(data):
+    """
+    Calculate de-meaned expected returns from asset price data and scale them by standard deviation.
+
+    Parameters:
+        data (pd.DataFrame): DataFrame containing asset price data.
+
+    Returns:
+        pd.DataFrame: DataFrame containing expected returns.
+    """
     asset_returns = pd.DataFrame(
         data=np.zeros(shape=(len(data.index), data.shape[1])),
         columns=data.columns.values,
@@ -72,6 +81,15 @@ def get_expected_returns(data):
 
 
 def get_data(tickers):
+    """
+    Retrieve normalised asset price data from Yahoo Finance.
+
+    Parameters:
+        tickers (list): List of asset tickers to retrieve data for.
+
+    Returns:
+        pd.DataFrame: DataFrame containing normalised asset price data.
+    """
     data = yf.download(
         tickers=tickers,
         start=datetime.datetime(2018, 8, 10),
@@ -83,12 +101,33 @@ def get_data(tickers):
 
 
 def calculate_covariance_matrix(data):
+    """
+    Calculate the covariance matrix of asset returns.
+
+    Parameters:
+        data (pd.DataFrame): DataFrame containing asset returns.
+
+    Returns:
+        np.ndarray: Covariance matrix.
+    """
     return np.cov(data, rowvar=False)
 
 
-def plot_PCA_spectrum(
+def plot_PCA_variance(
     pca, num_assets, cumulative_variance, var_threshold=VARIANCE_THRESHOLD
 ):
+    """
+    Plot the PCA cumulative explained variance.
+
+    Parameters:
+        pca (PCA): PCA object.
+        num_assets (int): Number of assets.
+        cumulative_variance (np.ndarray): Array of cumulative explained variances.
+        var_threshold (float): Variance threshold for plotting.
+
+    Returns:
+        None
+    """
     # Plot the PCA spectrum
     if pca is not None:
         fig, ax = plt.subplots(figsize=(12, 6))
@@ -116,6 +155,15 @@ def plot_PCA_spectrum(
 
 
 def plot_percentage_variance(pca):
+    """
+    Plot the percentage of variance explained by each principal component.
+
+    Parameters:
+        pca (PCA): PCA object.
+
+    Returns:
+        None
+    """
     if pca is not None:
         bar_width = 0.9
         n_assets = pca.components_.shape[1]
@@ -135,6 +183,17 @@ def plot_percentage_variance(pca):
 
 
 def generate_eigenportfolios(cov_matrix, plot_cumulative_pca=False, plot_pct_var=False):
+    """
+    Generate eigenportfolios from the covariance matrix.
+
+    Parameters:
+        cov_matrix (np.ndarray): Covariance matrix of asset returns.
+        plot_cumulative_pca (bool): Whether to plot cumulative PCA spectrum.
+        plot_pct_var (bool): Whether to plot percentage of variance explained.
+
+    Returns:
+        np.ndarray: Array of eigenportfolios.
+    """
     pca = PCA().fit(cov_matrix)
 
     eigenvectors = pca.components_  # THIS IS ALREADY SORTED IN DECREASING ORDER
@@ -142,7 +201,7 @@ def generate_eigenportfolios(cov_matrix, plot_cumulative_pca=False, plot_pct_var
     for i in range(len(eigenvectors)):
         eigenvectors[i] = (
             eigenvectors[i] / eigenvectors[i].sum()
-        )  # Normalize weights so they sum to 1
+        )  # Normalise weights so they sum to 1
 
     # Calculate the cumulative sum of the explained variance ratio
     cumulative_variance = np.cumsum(pca.explained_variance_ratio_)
@@ -153,7 +212,7 @@ def generate_eigenportfolios(cov_matrix, plot_cumulative_pca=False, plot_pct_var
     )
 
     if plot_cumulative_pca:
-        plot_PCA_spectrum(pca, pca.components_.shape[1], cumulative_variance)
+        plot_PCA_variance(pca, pca.components_.shape[1], cumulative_variance)
 
     if plot_pct_var:
         plot_percentage_variance(pca)
@@ -169,6 +228,17 @@ def generate_eigenportfolios(cov_matrix, plot_cumulative_pca=False, plot_pct_var
 
 
 def plot_eigenportfolio_weights(eigenportfolios, index, tickers):
+    """
+    Plot the weights of a specific eigenportfolio.
+
+    Parameters:
+        eigenportfolios (np.ndarray): Array of eigenportfolios.
+        index (int): Index of the eigenportfolio to plot.
+        tickers (list): List of asset tickers.
+
+    Returns:
+        None
+    """
     assert index < len(
         eigenportfolios
     ), "Index must be less than the number of eigenportfolios"
