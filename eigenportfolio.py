@@ -166,6 +166,9 @@ def generate_eigenportfolios(cov_matrix, plot_cumulative_pca=False, plot_pct_var
 
 
 def plot_eigenportfolio_weights(eigenportfolios, index, tickers):
+
+    assert index < len(eigenportfolios), "Index must be less than the number of eigenportfolios"
+
     # Plot the weights of the index-th eigen-portfolio
     eigen_prtf1 = pd.DataFrame(
         data={"weights": eigenportfolios[index].squeeze() * 100}, index=tickers
@@ -191,6 +194,7 @@ if __name__ == "__main__":
         cov_matrix, plot_cumulative_pca=False, plot_pct_var=False
     )
 
+    # Plot the weights of the index-th eigenportfolio but it has to be less than the total number of eigenportfolios above
     plot_eigenportfolio_weights(
-        eigenportfolios, index=0, tickers=TICKERS
-    )  # Plot the weights of the index-th eigen-portfolio but it has to be less than the number of eigenportfolios
+        eigenportfolios, index=1, tickers=TICKERS
+    ) 
