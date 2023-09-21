@@ -58,14 +58,17 @@ TICKERS = [
     "DHR",
 ]
 
-def clean_up_data(data):
-    data.pct_change().dropna(inplace=True)
-    return data
 
-
-def normalize_data(data):
-    scaler = StandardScaler()
-    return scaler.fit_transform(data)
+def get_expected_returns(data):
+    asset_returns = pd.DataFrame(
+        data=np.zeros(shape=(len(data.index), data.shape[1])),
+        columns=data.columns.values,
+        index=data.index,
+    )
+    normed_returns = asset_returns
+    asset_returns = data.pct_change().dropna()
+    normed_returns = (asset_returns - asset_returns.mean()) / asset_returns.std()
+    return normed_returns
 
 
 def get_data(tickers):
@@ -74,8 +77,8 @@ def get_data(tickers):
         start=datetime.datetime(2018, 8, 10),
         end=datetime.datetime(2023, 8, 3),
     )[["Close"]]
-    data = clean_up_data(data)
-    data = normalize_data(data)
+
+    data = get_expected_returns(data)
     return data
 
 
@@ -166,8 +169,9 @@ def generate_eigenportfolios(cov_matrix, plot_cumulative_pca=False, plot_pct_var
 
 
 def plot_eigenportfolio_weights(eigenportfolios, index, tickers):
-
-    assert index < len(eigenportfolios), "Index must be less than the number of eigenportfolios"
+    assert index < len(
+        eigenportfolios
+    ), "Index must be less than the number of eigenportfolios"
 
     # Plot the weights of the index-th eigen-portfolio
     eigen_prtf1 = pd.DataFrame(
@@ -191,10 +195,13 @@ if __name__ == "__main__":
     cov_matrix = calculate_covariance_matrix(data)
 
     eigenportfolios = generate_eigenportfolios(
-        cov_matrix, plot_cumulative_pca=False, plot_pct_var=False
+        cov_matrix, plot_cumulative_pca=True, plot_pct_var=True
     )
 
     # Plot the weights of the index-th eigenportfolio but it has to be less than the total number of eigenportfolios above
     plot_eigenportfolio_weights(
+        eigenportfolios, index=0, tickers=TICKERS
+    )
+    plot_eigenportfolio_weights(
         eigenportfolios, index=1, tickers=TICKERS
-    ) 
+    )
