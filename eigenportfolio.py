@@ -57,13 +57,6 @@ TICKERS = [
     "LLY",
     "DHR",
 ]
-N_ASSETS = len(TICKERS)
-
-# np.random.seed(0)
-# num_samples = 50           # Number of portfolios
-# num_assets = 20           # Number of assets in each portfolio
-# data = np.random.rand(num_samples, num_assets) * 100
-
 
 def clean_up_data(data):
     data.pct_change().dropna(inplace=True)
@@ -122,16 +115,17 @@ def plot_PCA_spectrum(
 def plot_percentage_variance(pca):
     if pca is not None:
         bar_width = 0.9
-        x_indx = np.arange(N_ASSETS)
+        n_assets = pca.components_.shape[1]
+        x_indx = np.arange(n_assets)
         fig, ax = plt.subplots()
         fig.set_size_inches(12, 4)
 
         # Eigenvalues are measured as percentage of explained variance.
         rects = ax.bar(
-            x_indx, pca.explained_variance_ratio_[:N_ASSETS], bar_width, color="orange"
+            x_indx, pca.explained_variance_ratio_[:n_assets], bar_width, color="orange"
         )
         ax.set_xticks(x_indx + bar_width)
-        ax.set_xticklabels(list(range(N_ASSETS)), rotation=45)
+        ax.set_xticklabels(list(range(n_assets)), rotation=45)
         ax.set_title("Percent variance explained")
         ax.legend((rects[0],), ("Percent variance explained by principal components",))
         plt.show()
@@ -162,13 +156,30 @@ def generate_eigenportfolios(cov_matrix, plot_cumulative_pca=False, plot_pct_var
         plot_percentage_variance(pca)
 
     for i in range(num_components):
-        print(f"Eigenportfolio { i + 1 } weights are: \n{ eigenvectors[i] }")
+        print(f"Eigenportfolio { i } weights are: \n{ eigenvectors[i] }")
         print(
-            f"Eigenportfolio { i + 1 } variance is: \n{ pca.explained_variance_ratio_[i] }"
+            f"Eigenportfolio { i } variance is: \n{ pca.explained_variance_ratio_[i] }"
         )
         print("-------------------------------------------------")
 
     return eigenvectors[:num_components]
+
+
+def plot_eigenportfolio_weights(eigenportfolios, index, tickers):
+    # Plot the weights of the index-th eigen-portfolio
+    eigen_prtf1 = pd.DataFrame(
+        data={"weights": eigenportfolios[index].squeeze() * 100}, index=tickers
+    )
+    eigen_prtf1.sort_values(by=["weights"], ascending=False, inplace=True)
+    print("Sum of weights of first eigen-portfolio: %.2f" % np.sum(eigen_prtf1))
+    eigen_prtf1.plot(
+        title=f"Eigenportfolio { index } weights",
+        figsize=(12, 6),
+        xticks=range(0, len(tickers), 1),
+        rot=45,
+        linewidth=3,
+    )
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -176,6 +187,10 @@ if __name__ == "__main__":
 
     cov_matrix = calculate_covariance_matrix(data)
 
-    eigenportfolios = generate_eigenportfolios(cov_matrix, plot_cumulative_pca=False, plot_pct_var=False)
+    eigenportfolios = generate_eigenportfolios(
+        cov_matrix, plot_cumulative_pca=False, plot_pct_var=False
+    )
 
-    
+    plot_eigenportfolio_weights(
+        eigenportfolios, index=0, tickers=TICKERS
+    )  # Plot the weights of the index-th eigen-portfolio but it has to be less than the number of eigenportfolios
