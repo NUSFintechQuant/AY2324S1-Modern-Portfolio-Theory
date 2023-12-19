@@ -47,9 +47,9 @@ def best_arima_params(data):
     Returns:
     tuple: The best (p, d, q) parameters based on the Akaike Information Criterion (AIC).
     """
-    p_values = range(0, 3)
-    d_values = range(0, 2)
-    q_values = range(0, 3)
+    p_values = range(0, 5)
+    d_values = range(0, 3)
+    q_values = range(0, 5)
     best_score, best_order = float('inf'), None
     for p in p_values:
         for d in d_values:
@@ -63,31 +63,54 @@ def best_arima_params(data):
                     continue
     return best_order
 
-def forecast_stock_prices(data, periods=5):
+def forecast_stock_prices(data, periods=5, plot=False):
     """
-    Forecast future stock prices using an ARIMA model.
+    Forecast future stock prices using an ARIMA model and optionally plot the forecast.
     
     Parameters:
     data (pd.Series): The time series data on which the ARIMA model will be trained.
     periods (int): The number of future periods to forecast.
+    plot (bool): Whether to plot the forecast against the historical data.
     
     Returns:
     pd.Series: The forecasted values for the given number of periods.
     """
     # Check if data is stationary and difference if necessary
     if test_stationarity(data) > 0.05:
-        data = data.diff().dropna()
+        data_diff = data.diff().dropna()
+    else:
+        data_diff = data
 
-    # Plot ACF and PACF for parameter identification
-    plot_acf_pacf(data)
-
-    order = best_arima_params(data)
+    order = best_arima_params(data_diff)
     
     if order is not None:
-        model = ARIMA(data, order=order)
+        model = ARIMA(data_diff, order=order)
         results = model.fit()
-        forecast = results.forecast(steps=periods)
-        return forecast
+
+        # Uncomment this part for the predictions throughout the entire time series
+        # forecast = results.get_prediction(end=1500)
+        # forecast_series = forecast.predicted_mean
+        # forecast_index = pd.date_range(start=data.index[0], periods=len(forecast_series), freq='D')
+        # last_value = data.iloc[0] 
+        # forecast_series = np.cumsum(forecast_series)  # Cumulative sum of differences
+        # forecast_series += last_value
+
+        # Uncomment this part for the predictions for the next 60 days
+        forecast = results.get_forecast(steps=periods)
+        forecast_series = forecast.predicted_mean
+        forecast_index = pd.date_range(start=data.index[-1], periods=len(forecast_series), freq='D')
+
+        last_value = data.iloc[-1]  # Last known value before forecasting
+        forecast_series = np.cumsum(forecast_series)  # Cumulative sum of differences
+        forecast_series += last_value  # Add the last known value to the cumulative differences
+
+        if plot:
+            plt.figure(figsize=(10, 5))
+            plt.plot(data, label='Historical Prices')
+            plt.plot(forecast_index, forecast_series, label='Forecasted Prices', color='red')
+            plt.legend()
+            plt.show()
+        return forecast_series
     else:
         print("Could not find suitable ARIMA parameters")
         return None
@@ -95,11 +118,9 @@ def forecast_stock_prices(data, periods=5):
 if __name__ == "__main__":
     ticker = "AAPL"
     # Download stock data
-    data = yf.download(ticker, start="2020-01-01", end="2023-01-01")
+    data = yf.download(ticker, start="2020-01-01", end="2023-12-18")['Close']
     data.index = pd.to_datetime(data.index)  # Ensure index is datetime
-    stock_prices = data['Close']
-    stock_prices.index = pd.DatetimeIndex(data.index).to_period('D')
 
     # Forecast future stock prices for the specified stock
-    forecasted_prices = forecast_stock_prices(stock_prices, periods=5)
+    forecasted_prices = forecast_stock_prices(data, periods=60, plot=True)
     print(f"Forecasted Prices for {ticker}: {forecasted_prices}")
