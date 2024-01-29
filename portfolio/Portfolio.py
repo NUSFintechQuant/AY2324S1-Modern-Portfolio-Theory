@@ -95,6 +95,22 @@ class Portfolio:
                                self.config.name : price_df["consolidated"]})
         return ret_df
     
+    """
+    Backtests the portfolio.
+    
+    @param backtester The backtest engine.
+    
+    @return Performance of the portfolio.
+    """
+    def backtest(self, engine) -> None:
+        df = self.generate_df()
+        price_df = df.loc[:, df.columns != 'date']
+        engine.load_data(price_df)
+        results = engine.run()
+        metrics = ['Sharpe Ratio', 'Max Drawdown', 'PnL', 'Beta']
+        for metric in metrics:
+            print("{}: {}".format(metric, results[metric]))
+    
 """
 Default portfolios for backtesting, allocation given as per released NFS paper.
 Note that keys in the holding dictionary corresponds to .csv name in ./data.
