@@ -104,8 +104,13 @@ class Portfolio:
     """
     def backtest(self, engine) -> None:
         df = self.generate_df()
-        price_df = df.loc[:, df.columns != 'date']
-        engine.load_data(price_df)
+        price_df = df.copy()
+        price_df['date'] = pd.to_datetime(price_df['date'])
+        price_df.set_index('date', inplace=True)
+        # convert price df to % change price df
+        percentage_change_price_df = price_df.pct_change()
+        # print(percentage_change_price_df)
+        engine.load_data(percentage_change_price_df)
         results = engine.run()
         metrics = ['Sharpe Ratio', 'Max Drawdown', 'PnL', 'Beta']
         for metric in metrics:
