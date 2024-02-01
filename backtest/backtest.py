@@ -1,18 +1,20 @@
+import math
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import json
 from typing import Optional, Union
-
-# from somewhere import scrape_data
-# from somewhere import fetch_data
 
 class Backtest:
     def __init__(self, initial_weights: Optional[pd.DataFrame] = None) -> None:
         self.initial_weights = initial_weights
         self.historical_returns = None
         self.results = {}
+    
+    def set_weights(self, initial_weights):
+        self.initial_weights = initial_weights
 
     def load_data(self, data: Optional[pd.DataFrame] = None, source: Optional[str] = 'database') -> None:
         """
@@ -55,18 +57,23 @@ class Backtest:
         portfolio_returns = self.historical_returns.dot(weights)
         return portfolio_returns
 
-    def _calculate_sharpe(self, risk_free_rate: Optional[float] = 0.03) -> float:
+    def _calculate_sharpe(self, risk_free_rate_annual: Optional[float] = 0.03) -> float:
         """
         Calculates Sharpe assuming a risk-free rate of 3%.
         """
         portfolio_returns = self._calculate_portfolio_returns()
 
-        mean_return = portfolio_returns.mean()
-        return_std = portfolio_returns.std()
+        # discount risk-free rate (assuming 252 trading days a year)
+        # 1.03 = (1 + x)^{252}
+        risk_free_rate_daily = math.exp(math.log(risk_free_rate_annual + 1) / 252) - 1
 
-        sharpe_ratio = (mean_return - risk_free_rate) / return_std
+        mean_return_daily = portfolio_returns.mean()
+        return_std_daily = portfolio_returns.std()
 
-        return sharpe_ratio
+        sharpe_ratio_daily = (mean_return_daily - risk_free_rate_daily) / return_std_daily
+        sharpe_ratio_annual = sharpe_ratio_daily * math.sqrt(252)
+
+        return sharpe_ratio_annual
 
     def _calculate_max_drawdown(self) -> float:
         portfolio_returns = self._calculate_portfolio_returns()
@@ -106,19 +113,19 @@ class Backtest:
         """
         Plot cumulative portfolio returns over time.
         """
-        sns.set_style("whitegrid")
-        sns.set_context("talk")
+        sns.set(style="ticks", palette="muted", context="notebook")
 
         # Plotting
         plt.figure(figsize=(12, 6))
-        sns.lineplot(data=cumulative_returns, linewidth=2.5, color="royalblue")
+        sns.lineplot(data=cumulative_returns*100, linewidth=2.5, color="royalblue")
 
         # Setting plot title and labels
-        plt.title("Cumulative Portfolio Returns Over Time")
-        plt.xlabel("Time Step")
-        plt.ylabel("Cumulative Returns")
-        plt.tight_layout()
+        plt.title("")
+        plt.xlabel("")
+        plt.ylabel("")
 
+        sns.despine()
+        plt.tight_layout()
         plt.show()
 
     def run(self) -> pd.DataFrame:
@@ -128,7 +135,7 @@ class Backtest:
         portfolio_returns = self._calculate_portfolio_returns()
         
         self.results['Portfolio Returns'] = portfolio_returns.tolist()
-        self.results['Cumulative Returns'] = (1 + portfolio_returns).cumprod().tolist()
+        self.results['Cumulative Returns'] = (1 + portfolio_returns).cumprod()
         self.results['Sharpe Ratio'] = self._calculate_sharpe()
         self.results['Max Drawdown'] = self._calculate_max_drawdown()
         self.results['PnL'] = self._calculate_pnl()
@@ -137,27 +144,3 @@ class Backtest:
         self._plot_portfolio_performance(self.results['Cumulative Returns'])
 
         return self.results
-
-def main():
-    df_imported = pd.read_json('object.json', orient='columns')
-    print(df_imported)
-
-    #make sure the tickers align with tickers in data-scrapper.py
-    initial_weights = pd.DataFrame({
-        'AAPL': [0.1],
-        'GOOG': [0.1],
-        'MSFT': [0.2],
-        'TSLA': [0.3],
-        'BA': [0.3]
-    })
-
-    backtest = Backtest(initial_weights)
-    backtest.load_data(df_imported)
-    results = backtest.run()
-
-    metrics = ['Sharpe Ratio', 'Max Drawdown', 'PnL', 'Beta']
-    for metric in metrics:
-        print("{}: {}".format(metric, results[metric]))
-
-if __name__ == "__main__":
-    main()

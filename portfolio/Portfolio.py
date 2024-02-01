@@ -70,10 +70,16 @@ class Portfolio:
     def generate_columns_needed(self, asset : str) -> pd.DataFrame:
         #NOTE: Relative import used here, data needs to be pulled via wrds and stored in data dir.
         try:
-            df = pd.read_csv("../data/{}.csv".format(asset))
+            if not self.config.download:
+                if asset not in self.config.downloaded:
+                    df = pd.read_csv("../data/{}.csv".format(asset))
+                else:
+                    df = self.config.downloaded[asset]
+            else:
+                df = pd.read_csv("../data/{}.csv".format(asset))
         except:
             raise LackOfDataException()
-        date_series = df["datadate"]
+        date_series = pd.to_datetime(df["datadate"]) # Convert to datetime for consistency.
         price = df["prccd"]
         ret_df = pd.DataFrame(
             {"date" : date_series, asset : price})
@@ -99,13 +105,16 @@ class Portfolio:
     Backtests the portfolio.
     
     @param backtester The backtest engine.
-    
+    @param start The start of testing period
+    @param end The end of testing period
     @return Performance of the portfolio.
     """
-    def backtest(self, engine) -> None:
+    def backtest(self, engine, start='1900-01-01', end='2050-01-01') -> None:
+        engine.set_weights(self.generate_weights())
         df = self.generate_df()
         price_df = df.copy()
         price_df['date'] = pd.to_datetime(price_df['date'])
+        price_df = price_df[(price_df['date'] >= start) & (price_df['date'] <= end)]
         price_df.set_index('date', inplace=True)
         # convert price df to % change price df
         percentage_change_price_df = price_df.pct_change()
@@ -137,7 +146,7 @@ ALL_WEATHER = Portfolio(PortfolioConfig("all_weather", {
     "inter_us_bonds" : 0.15,
     "gold" : 0.075,
     "commodities" : 0.075,
-}))
+}, download=True))
 
 """
 Bernstein Portfolio:
@@ -153,9 +162,9 @@ BERNSTEIN = Portfolio(PortfolioConfig("bernstein", {
     "snp500" : 0.25,
     "foreign_large_cap" : 0.25,
     "us_small_cap" : 0.25,
-}))
+}, download=True))
 
 MVO = Portfolio(PortfolioConfig("mvo", {
     "us_bonds" : 0.03915074751969351,
     "snp500": 0.9608492524803065,
-}))
+}, download=True))
