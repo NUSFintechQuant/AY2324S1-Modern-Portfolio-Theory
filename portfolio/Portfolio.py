@@ -154,3 +154,8 @@ BERNSTEIN = Portfolio(PortfolioConfig("bernstein", {
     "foreign_large_cap" : 0.25,
     "us_small_cap" : 0.25,
 }))
+
+MVO = Portfolio(PortfolioConfig("mvo", {
+    "us_bonds" : 0.03915074751969351,
+    "snp500": 0.9608492524803065,
+}))
