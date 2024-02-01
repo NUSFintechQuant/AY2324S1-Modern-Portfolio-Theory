@@ -70,10 +70,16 @@ class Portfolio:
     def generate_columns_needed(self, asset : str) -> pd.DataFrame:
         #NOTE: Relative import used here, data needs to be pulled via wrds and stored in data dir.
         try:
-            df = pd.read_csv("../data/{}.csv".format(asset))
+            if not self.config.download:
+                if asset not in self.config.downloaded:
+                    df = pd.read_csv("../data/{}.csv".format(asset))
+                else:
+                    df = self.config.downloaded[asset]
+            else:
+                df = pd.read_csv("../data/{}.csv".format(asset))
         except:
             raise LackOfDataException()
-        date_series = df["datadate"]
+        date_series = pd.to_datetime(df["datadate"]) # Convert to datetime for consistency.
         price = df["prccd"]
         ret_df = pd.DataFrame(
             {"date" : date_series, asset : price})
@@ -137,7 +143,7 @@ ALL_WEATHER = Portfolio(PortfolioConfig("all_weather", {
     "inter_us_bonds" : 0.15,
     "gold" : 0.075,
     "commodities" : 0.075,
-}))
+}, download=True))
 
 """
 Bernstein Portfolio:
@@ -153,4 +159,4 @@ BERNSTEIN = Portfolio(PortfolioConfig("bernstein", {
     "snp500" : 0.25,
     "foreign_large_cap" : 0.25,
     "us_small_cap" : 0.25,
-}))
+}, download=True))
