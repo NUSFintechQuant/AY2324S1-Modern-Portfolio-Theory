@@ -105,13 +105,16 @@ class Portfolio:
     Backtests the portfolio.
     
     @param backtester The backtest engine.
-    
+    @param start The start of testing period
+    @param end The end of testing period
     @return Performance of the portfolio.
     """
-    def backtest(self, engine) -> None:
+    def backtest(self, engine, start='1900-01-01', end='2050-01-01') -> None:
+        engine.set_weights(self.generate_weights())
         df = self.generate_df()
         price_df = df.copy()
         price_df['date'] = pd.to_datetime(price_df['date'])
+        price_df = price_df[(price_df['date'] >= start) & (price_df['date'] <= end)]
         price_df.set_index('date', inplace=True)
         # convert price df to % change price df
         percentage_change_price_df = price_df.pct_change()
