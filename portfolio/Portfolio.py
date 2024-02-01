@@ -109,7 +109,7 @@ class Portfolio:
     @param end The end of testing period
     @return Performance of the portfolio.
     """
-    def backtest(self, engine, start='1900-01-01', end='2050-01-01') -> None:
+    def backtest(self, engine, start='1900-01-01', end='2050-01-01') -> dict:
         engine.set_weights(self.generate_weights())
         df = self.generate_df()
         price_df = df.copy()
@@ -124,6 +124,7 @@ class Portfolio:
         metrics = ['Sharpe Ratio', 'Max Drawdown', 'PnL', 'Beta']
         for metric in metrics:
             print("{}: {}".format(metric, results[metric]))
+        return results
     
 """
 Default portfolios for backtesting, allocation given as per released NFS paper.
@@ -164,7 +165,22 @@ BERNSTEIN = Portfolio(PortfolioConfig("bernstein", {
     "us_small_cap" : 0.25,
 }, download=True))
 
+"""
+MVO Portfolio:
+    US Bonds : 3.9%
+    US Large Cap (SnP500) : 96.0%
+"""
 MVO = Portfolio(PortfolioConfig("mvo", {
     "us_bonds" : 0.03915074751969351,
     "snp500": 0.9608492524803065,
+}, download=True))
+
+"""
+SnP500 Index Portfolio:
+
+    US Large Cap (SnP500) : 100%
+    
+"""
+SNP500 = Portfolio(PortfolioConfig("snp500", {
+    "snp500" : 1,
 }, download=True))

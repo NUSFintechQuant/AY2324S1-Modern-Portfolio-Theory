@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import json
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 class Backtest:
     def __init__(self, initial_weights: Optional[pd.DataFrame] = None) -> None:
@@ -109,15 +109,20 @@ class Backtest:
         beta = covariance_matrix[0, 1] / covariance_matrix[1, 1]
         return beta
 
-    def _plot_portfolio_performance(self, cumulative_returns: pd.Series) -> None:
+    def _plot_portfolio_performance(self, cumulative_returns: List[pd.Series]) -> None:
         """
         Plot cumulative portfolio returns over time.
         """
         sns.set(style="ticks", palette="muted", context="notebook")
 
+        # Combine the series into one DataFrame
+        combined_data = pd.concat(cumulative_returns, axis=1) * 100
+
         # Plotting
         plt.figure(figsize=(12, 6))
-        sns.lineplot(data=cumulative_returns*100, linewidth=2.5, color="royalblue")
+
+        for column in combined_data.columns:
+            sns.lineplot(data=combined_data, x=combined_data.index, y=column, label=column)
 
         # Setting plot title and labels
         plt.title("")
@@ -141,6 +146,14 @@ class Backtest:
         self.results['PnL'] = self._calculate_pnl()
         self.results['Beta'] = self._calculate_beta()
         
-        self._plot_portfolio_performance(self.results['Cumulative Returns'])
+        self._plot_portfolio_performance([self.results['Cumulative Returns']])
 
         return self.results
+    
+    def run_multiple(self, portfolios, start='1900-01-01', end='2050-01-01'):
+        backtest_results = [portfolio.backtest(Backtest(), start, end) for portfolio in portfolios]
+        portfolios_cumulative_returns = [result['Cumulative Returns'] for result in backtest_results]
+        for i in range(len(portfolios)):
+            portfolio_name = portfolios[i].config.name
+            portfolios_cumulative_returns[i].name = portfolio_name
+        self._plot_portfolio_performance(portfolios_cumulative_returns)
