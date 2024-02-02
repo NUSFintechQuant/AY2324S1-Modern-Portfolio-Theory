@@ -3,7 +3,15 @@ import numpy as np
 import pandas as pd
 import math
 
-def get_mean_and_variance(assets):
+"""
+Helper function to load data from /data directory based on the provided assets
+and calculate the expectation and covariance matrix.
+    
+    @param assets The list of assets as strings.
+    
+    @return Tuple of expected returns and the covariance matrix for the provided assets.
+"""
+def get_mean_and_variance(assets) -> tuple[pd.Series, np.ndarray]:
     df = pd.read_csv("../data/{}.csv".format(assets[0]))
     date_series = df["datadate"]
     price = df["prccd"]
@@ -26,7 +34,21 @@ def get_mean_and_variance(assets):
     covariance_matrix = df.cov().to_numpy()
     return [expected_returns, covariance_matrix]
 
-def efficient_portfolio_generation(max_return, increment, covariance_matrix, expected_returns):
+"""
+Helper function to iterate through a range of return levels and utilize the convex optimization
+library to solve for portfolios on the efficient frontier.
+    
+    @param max_return The upper bound for the return levels to search for
+    
+    @param increment The interval between the return levels
+    
+    @param covariance_matrix Covariance matrix of the n assets
+    
+    @param expected_returns Expected returns of the n assets
+    
+    @return Tuple of expected returns and the covariance matrix for the provided assets.
+"""
+def efficient_portfolio_generation(max_return: int, increment: int, covariance_matrix: np.ndarray, expected_returns: pd.Series) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     returns_min_annualized = -1.00
     num_iterations = (int) ((max_return - returns_min_annualized) / increment)
     efficient_portfolio_returns = np.empty((num_iterations,))
@@ -59,7 +81,12 @@ def efficient_portfolio_generation(max_return, increment, covariance_matrix, exp
       returns_min_annualized += increment
     return [efficient_portfolio_returns, efficient_portfolio_volatilities, sharpe_ratios]
 
-def mean_variance_optimization():
+"""
+Main driver that carries out mean-variance optimization by calling the appropriate helper methods.
+    
+    @return market_portfolio The pandas Series containing details about the chosen market portfolio
+"""
+def mean_variance_optimization() -> pd.Series:
     [expected_returns, covariance_matrix] = get_mean_and_variance(['commodities', 'gold', 'us_small_cap', 'snp500', 'us_bonds'])
     [efficient_portfolio_returns, efficient_portfolio_volatilities, sharpe_ratios] = efficient_portfolio_generation(1.00, 0.02, covariance_matrix, expected_returns)
     sharpe_ratios = sharpe_ratios.rename(index={0: 'Returns', 1: 'Risk', 2: 'Sharpe Ratio', 3: 'Weights'})
