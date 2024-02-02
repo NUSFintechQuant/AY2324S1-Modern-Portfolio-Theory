@@ -169,10 +169,14 @@ BERNSTEIN = Portfolio(PortfolioConfig("bernstein", {
 MVO Portfolio:
     US Bonds : 3.9%
     US Large Cap (SnP500) : 96.0%
-"""
+"""  
+         
 MVO = Portfolio(PortfolioConfig("mvo", {
-    "us_bonds" : 0.03915074751969351,
-    "snp500": 0.9608492524803065,
+    "commodities": 0,
+    "gold": 1.79363828e-01+1.57132094e-23,
+    "us_small_cap": 2.20636172e-01,
+    "snp500" : 3.00000000e-01,
+    "us_bonds": 3.00000000e-01
 }, download=True))
 
 """
